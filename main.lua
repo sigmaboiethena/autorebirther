@@ -10,14 +10,15 @@ local player = Players.LocalPlayer
 
 
 local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local backpack = player:WaitForChild("Backpack")
+-- local humanoid = character:WaitForChild("Humanoid")
+-- local backpack = player:WaitForChild("Backpack")
 
 local net = require(RS.Packages.Net);
 local Sell = net:RemoteEvent("PlotService/Sell");
-local CastEvent = net:RemoteEvent("FishingRod.Cast")
-local CancelEvent = net:RemoteEvent("FishingRod.Cancel")
-local MinigameClick = net:RemoteEvent("FishingRod.MinigameClick")
+-- local CastEvent = net:RemoteEvent("FishingRod.Cast")
+-- local CancelEvent = net:RemoteEvent("FishingRod.Cancel")
+-- local MinigameClick = net:RemoteEvent("FishingRod.MinigameClick")
+local ClaimEvent = net:RemoteFunction("AdventService/ClaimReward");
 
 local function waitForPath(parent, ...)
     local cur = parent
@@ -366,43 +367,43 @@ local function rebirth()
     end
 end
 
-local function hasTool(toolName)
-    return backpack:FindFirstChild(toolName) ~= nil
-end
+-- local function hasTool(toolName)
+--     return backpack:FindFirstChild(toolName) ~= nil
+-- end
 
-local function equipTool(toolName)
-    local tool = backpack:FindFirstChild(toolName)
-    if tool then
-        humanoid:EquipTool(tool)
-        return tool
-    end
-    return nil
-end
+-- local function equipTool(toolName)
+--     local tool = backpack:FindFirstChild(toolName)
+--     if tool then
+--         humanoid:EquipTool(tool)
+--         return tool
+--     end
+--     return nil
+-- end
 
-local function autoFish()
-    local fishingRod = equipTool("Fishing Rod")
-    if not fishingRod then
-        print("No fishing rod in eq (Is flood active?)")
-        return
-    end
-    fishingRod:Activate()
-    task.wait(2)
-    CastEvent:FireServer(1)
+-- local function autoFish()
+--     local fishingRod = equipTool("Fishing Rod")
+--     if not fishingRod then
+--         print("No fishing rod in eq (Is flood active?)")
+--         return
+--     end
+--     fishingRod:Activate()
+--     task.wait(2)
+--     CastEvent:FireServer(1)
 
-    repeat 
-        task.wait(0.1)
-    until fishingRod:GetAttribute("minigame")
+--     repeat 
+--         task.wait(0.1)
+--     until fishingRod:GetAttribute("minigame")
 
-    while fishingRod:GetAttribute("minigame") do
-        if fishingRod:GetAttribute("minigame") then
-            MinigameClick:FireServer()
-        end
-        task.wait(0.1)
-    end
-    task.wait(0.5)
-    humanoid:UnequipTools()
-    -- CancelEvent:FireServer()
-end
+--     while fishingRod:GetAttribute("minigame") do
+--         if fishingRod:GetAttribute("minigame") then
+--             MinigameClick:FireServer()
+--         end
+--         task.wait(0.1)
+--     end
+--     task.wait(0.5)
+--     humanoid:UnequipTools()
+--     -- CancelEvent:FireServer()
+-- end
 
 local myPlot = ensureMyPlot()
 task.wait(1)
@@ -421,41 +422,53 @@ while true do
         task.wait(1)
     end
 
-    while not hasTool("Fishing Rod") do
-        print("Flood not active...")
-        task.wait(2)
-    end
-    print("Flood started")
-
-    while cashValue.Value < 500000 do
-        local lockButton = myPlot:WaitForChild("Purchases"):FindFirstChild("PlotBlock"):FindFirstChild("Main")
-        -- if isBasePart(lockButton) then
-        --     walkToDynamic(lockButton, 3, 10)
-        -- end
-        task.wait(1)
-        -- spamJump(3)
-        -- if countOwned(myPlot) > 0 then 
-            -- task.spawn(function() sellCheapest(myPlot) end)
-            -- task.wait(6)
-            -- print('collected coins')
-        -- end
-
-        local skip = false
-        task.spawn(function()
-            while countOwned(myPlot) > 0 and not skip do
-                sellCheapest(myPlot)
-                task.wait(1)
-            end
-        end)
-        task.wait(10)
-        skip = true
-
-        task.wait(1)
-        if countOwned(myPlot) <= 6 then
-            autoFish()
-        end
+    if cashValue < 500000 then
+        ClaimEvent:InvokeServer("Calendar", 1);
         task.wait(3)
+        sellCheapest(myPlot)
+        task.wait(5)
     end
+
+    while cashValue < 500000 do
+        task.wait(1)
+        sellCheapest(myPlot)
+    end
+
+    -- while not hasTool("Fishing Rod") do
+    --     print("Flood not active...")
+    --     task.wait(2)
+    -- end
+    -- print("Flood started")
+
+    -- while cashValue.Value < 500000 do
+    --     local lockButton = myPlot:WaitForChild("Purchases"):FindFirstChild("PlotBlock"):FindFirstChild("Main")
+    --     -- if isBasePart(lockButton) then
+    --     --     walkToDynamic(lockButton, 3, 10)
+    --     -- end
+    --     task.wait(1)
+    --     -- spamJump(3)
+    --     -- if countOwned(myPlot) > 0 then 
+    --         -- task.spawn(function() sellCheapest(myPlot) end)
+    --         -- task.wait(6)
+    --         -- print('collected coins')
+    --     -- end
+
+    --     local skip = false
+    --     task.spawn(function()
+    --         while countOwned(myPlot) > 0 and not skip do
+    --             sellCheapest(myPlot)
+    --             task.wait(1)
+    --         end
+    --     end)
+    --     task.wait(10)
+    --     skip = true
+
+    --     task.wait(1)
+    --     if countOwned(myPlot) <= 6 then
+    --         autoFish()
+    --     end
+    --     task.wait(3)
+    -- end
     
     if cashValue and cashValue.Value and cashValue.Value >= 500000 then
         local skip = false
