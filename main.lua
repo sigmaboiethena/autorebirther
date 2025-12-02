@@ -358,7 +358,7 @@ local function scanModel(m)
         local p2 = bestName and PRIORITY_INDEX[bestName]
 
         if p1 then
-            if not p2 or p1 > p2 then
+            if not p2 or p1 < p2 then
                 bestName = name
                 bestMPS = money
             end
@@ -648,14 +648,13 @@ task.spawn(function()
     task.wait(1.0)
     pcall(function() brainrotGather() end)
     task.wait(0.5)
-    oneShotHop()
-
     task.spawn(function()
         while true do
             pcall(function() brainrotGather() end)
             task.wait(WEBHOOK_REFRESH)
         end
     end)
+    oneShotHop()
 end)
 
 -- torch, chatgpt ethiopia and more
