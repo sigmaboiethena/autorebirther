@@ -422,14 +422,14 @@ while true do
         task.wait(1)
     end
 
-    if cashValue < 500000 then
+    if cashValue.Value < 500000 then
         ClaimEvent:InvokeServer("Calendar", 1);
         task.wait(3)
         sellCheapest(myPlot)
         task.wait(5)
     end
 
-    while cashValue < 500000 do
+    while cashValue.Value < 500000 do
         task.wait(1)
         sellCheapest(myPlot)
     end
