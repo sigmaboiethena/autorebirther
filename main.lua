@@ -1,6 +1,4 @@
--- Конфиг
-local BACKEND_URL = "https://serverfetcher.onrender.com/"  -- Поменять на свой, в конце ссылки поставить /
-local MIN_PLAYERS = 0                         -- /next фильтрует сервера с min_players
+local BACKEND_URL = "https://serverfetcher.onrender.com/"
 
 local WEBHOOKS = {
     -- admin ones
@@ -8,7 +6,7 @@ local WEBHOOKS = {
     ['https://discord.com/api/webhooks/1442246699149168702/qIW_e9VjOha4G82Bej2ciVj50fAYyFARhcsVX_UqKFNoOG2HtmSsfILMC-sDSAogm0ho'] = {min = 10_000_000, max = 99_999_999},
     ['https://discord.com/api/webhooks/1442633477030674462/lWUD-f-K2Wy5l67zKLgAWzEipWV9crP6hZiKHzqHvUJtwcPCnl1VlKcWGXE5rulDUF6x'] = {min = 100_000_000, max = math.huge},
     -- user ones
-    ['https://discord.com/api/webhooks/1442633779033411596/XnH3-3rlrj6NiNR7GVk6FhFszxkOmxZgzlg9ZoS8HAO17k1nte9TaoZr85uJHi9fPq7m'] = {min = 3_000_000, max = 9_999_999},
+    -- ['https://discord.com/api/webhooks/1442633779033411596/XnH3-3rlrj6NiNR7GVk6FhFszxkOmxZgzlg9ZoS8HAO17k1nte9TaoZr85uJHi9fPq7m'] = {min = 3_000_000, max = 9_999_999},
     ['https://discord.com/api/webhooks/1442633978270978059/1W0Dxr21NtsNaFXf0LxHVdkpPTqgmsmmxI2txVR9NWFr8ZOp8YcPR4fuegwnq3IauQxC'] = {min = 100_000_000, max = math.huge, highlight = true}
 }
 
@@ -53,7 +51,6 @@ local brainRotImages = {
     ['Ketupat Kepat'] = "https://static.wikia.nocookie.net/stealabr/images/a/ac/KetupatKepat.png/revision/latest?cb=20251121154301",
     ['Tacorita Bicicleta'] = "https://static.wikia.nocookie.net/stealabr/images/0/0f/Gonna_rob_you_twin.png/revision/latest?cb=20251006133721",
     ['Los 67'] = "https://static.wikia.nocookie.net/stealabr/images/d/db/Los-67.png/revision/latest?cb=20251103171526",
-    ['Tang Tang Keletang'] = "https://static.wikia.nocookie.net/stealabr/images/8/8f/TangTang.png/revision/latest?cb=20251014024653",
     ['Capitano Moby'] = "https://static.wikia.nocookie.net/stealabr/images/e/ef/Moby.png/revision/latest?cb=20251101185416",
     -- 10m
     ['Los Cucarachas'] = "https://static.wikia.nocookie.net/stealabr/images/a/ac/Los_Cucarachas_no_effect.png/revision/latest?cb=20251125124717",
@@ -79,29 +76,62 @@ local brainRotImages = {
     ['Job Job Job Sahur'] = 'https://static.wikia.nocookie.net/stealabr/images/0/03/Job.webp/revision/latest?cb=20250817162104',
     ['Chillin Chili'] = "https://static.wikia.nocookie.net/stealabr/images/e/e0/Chilin.png/revision/latest?cb=20251006204612",
     ['Los Chicleteiras'] = "https://static.wikia.nocookie.net/stealabr/images/4/4d/Los_ditos.png/revision/latest?cb=20250928224101",
-    
+    ['Chipso and Queso'] = "https://static.wikia.nocookie.net/stealabr/images/f/f8/Chipsoqueso.png/revision/latest?cb=20251030022105",
+
 }
 
+local PRIORITY_ANIMALS = {
+    "Strawberry Elephant",
+    "Meowl",
+    "Headless Horseman",
+    "Dragon Cannelloni",
+    "Capitano Moby",
+    "Cooki and Milki",
+    "La Supreme Combinasion",
+    "Burguro and Fryuro",
+    "Fragrama and Chocrama",
+    "Garama and Madundung",
+    "Lavadorito Spinito",
+    "Spooky and Pumpky",
+    "La Casa Boo",
+    "La Secret Combinasion",
+    "Chillin Chili",
+    "Ketchuru and Musturu",
+    "Ketupat Kepat",
+    "La Taco Combinasion",
+    "Tang Tang Keletang",
+    "Tictac Sahur",
+    "W or L",
+    "Spaghetti Tualetti",
+    "Nuclearo Dinossauro",
+    "Money Money Puggy"
+}
 
--- Рефреш (было 0.40, сделал 0.30)
+local PRIORITY_INDEX = {}
+for i, v in ipairs(PRIORITY_ANIMALS) do
+    PRIORITY_INDEX[v] = i
+end
+
+
+-- config stuff
 local WEBHOOK_REFRESH = 0.30
-local MODEL_MAX_SIZE = 40
 
--- Телепорт (настройки)
 local TP_MIN_GAP_S     = 1
-local TP_JITTER_MIN_S  = 0.5
-local TP_JITTER_MAX_S  = 0.5
-local TP_STUCK_TIMEOUT = 12.0
+local TP_JITTER_MIN_S  = 0.4
+local TP_JITTER_MAX_S  = 0.6
 
--- Сервисы
+-- Services
 local HttpService     = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players         = game:GetService("Players")
 local CoreGui         = game:GetService("CoreGui")
 local LocalPlayer     = Players.LocalPlayer
 
+-- ==========================================================
+-- Optimazations
+-- ==========================================================
+
 task.spawn(function()
-    -- 1) Отключаем 3D графику
     local RunService = game:GetService("RunService")
 
     while true do
@@ -112,25 +142,15 @@ task.spawn(function()
     end
 end)
 
--- task.spawn(function() useless, fishstrap should cap fps without some warning
---     -- 2) Ставим очень низкий FPS (для нагрузки)
---     pcall(function()
---         if setfpscap then setfpscap(30) end
---     end)
--- end)
-
 task.spawn(function()
-    -- 3) Ловим любые попытки Roblox включить рендер
     local workspace = game:GetService("Workspace")
 
     while true do
         pcall(function()
-            -- Стриминг: меньше загружается карта -> быстрее хоп
             workspace.StreamingEnabled = true
             workspace.StreamingMinRadius = 16
             workspace.StreamingTargetRadius = 32
 
-            -- Удаление ненужных эффектов
             if workspace.CurrentCamera then
                 workspace.CurrentCamera.FieldOfView = 30
             end
@@ -141,7 +161,7 @@ end)
 
 
 -- ==========================================================
--- Анти-АФК (без ошибок при раннем запуске)
+-- Anti AFK
 -- ==========================================================
 task.spawn(function()
     while not Players.LocalPlayer do
@@ -198,97 +218,19 @@ local function postJSON(path, tbl)
 end
 
 -- ==========================================================
--- Монитор зависания JobID (мягкий рестарт логики)
--- ==========================================================
-local lastJobIdOkTime    = os.clock()
-local consecutiveNoJobId = 0
-local NO_JOBID_STALL_TIME = 120   -- 120 сек без нормального JobID => мягкий ресет
-local MAX_CONSECUTIVE_NOJOB = 40  -- 40 подряд пустых ответов => ресет
-local softResetInProgress = false
-
-local function markJobIdOk()
-    lastJobIdOkTime    = os.clock()
-    consecutiveNoJobId = 0
-end
-
-local function markJobIdFail()
-    consecutiveNoJobId = consecutiveNoJobId + 1
-end
-
-local function softResetJobFlow(reason)
-    if softResetInProgress then return end
-    softResetInProgress = true
-
-    warn("[JOBID RESET] мягкий рестарт логики /next: " .. tostring(reason or "нет причины"))
-
-    -- Попробуем освободить текущий ключ на бэкенде
-    pcall(function()
-        postJSON("release", {
-            placeId = game.PlaceId,
-            key     = tostring(game.JobId)
-        })
-    end)
-
-    -- Сбрасываем локальные счётчики/тайминги
-    lastJobIdOkTime    = os.clock()
-    consecutiveNoJobId = 0
-    lastAttemptJobId   = nil
-    lastTeleportAt     = 0
-    lastFailAt         = 0
-
-    -- Даем бэкенду «подышать»
-    task.delay(6, function()
-        softResetInProgress = false
-        warn("[JOBID RESET] мягкий рестарт завершён, продолжаем работу")
-    end)
-end
-
--- фоновый вотчдог на случай полной тишины
-task.spawn(function()
-    while true do
-        local dt = os.clock() - lastJobIdOkTime
-        if dt > NO_JOBID_STALL_TIME and not softResetInProgress then
-            softResetJobFlow("watchdog: " .. math.floor(dt) .. " секунд без JobID")
-        end
-        task.wait(10)
-    end
-end)
-
--- ==========================================================
--- /next: minPlayers + JobID (с учётом мониторинга)
+-- /next: Fetching next server
 -- ==========================================================
 local function nextServer()
-    local data = postJSON("next", {
-        placeId    = game.PlaceId,
-        currentJob = game.JobId,
-        minPlayers = MIN_PLAYERS,
-    })
-    print('fetched next ()')
+    local data = postJSON("next", {})
     if type(data) == "table" and data.ok and data.id then
-        markJobIdOk()
         return tostring(data.id)
-    end
-
-    markJobIdFail()
-
-    if (consecutiveNoJobId >= MAX_CONSECUTIVE_NOJOB)
-        or ((os.clock() - lastJobIdOkTime) > NO_JOBID_STALL_TIME) then
-        softResetJobFlow("nextServer: слишком долго нет JobID")
     end
 
     task.wait(0.2)
     return nil
 end
-
-local function releaseKey(serverId)
-    if not serverId then return end
-    pcall(function()
-        postJSON("release", { placeId = game.PlaceId, key = tostring(serverId) })
-    end)
-end
-
 -- ==========================================================
--- Телепорт: повтор через бэкенд + джиттер + кулдавн + ватчдог
+-- Teleporting to servers
 -- ==========================================================
 local lastAttemptJobId, lastFailAt = nil, 0
 local lastTeleportAt = 0
@@ -302,154 +244,39 @@ local function jitter()
 end
 
 local rebirths = Players.LocalPlayer:WaitForChild("leaderstats"):WaitForChild("Rebirths")
+
 function tryTeleportTo(jobId)
-    print('trying tp ', jobId)
     local now = os.clock()
     local gap = now - (lastTeleportAt or 0)
     if gap < TP_MIN_GAP_S then
         task.wait(TP_MIN_GAP_S - gap)
     end
+
     jitter()
-    print('ass')
+
     lastAttemptJobId = tostring(jobId)
-    -- task.wait(15)
+
     local ok = pcall(function()
         TeleportService:TeleportToPlaceInstance(game.PlaceId, lastAttemptJobId, LocalPlayer)
     end)
     lastTeleportAt = os.clock()
-    print('im not ok')
-    if not ok then
-        task.spawn(releaseKey, lastAttemptJobId)
-        return false
-    end
-    print('im a flashlight hbu')
-    print(rebirths.Value)
-    -- ватчдог: если телепорт завис, берёт следующий
-    task.spawn(function()
-        local start = os.clock()
-        task.wait(TP_STUCK_TIMEOUT)
-        if (lastFailAt < start) and rebirths.Value > 0 then
-            local nid = nextServer()
-            if nid then tryTeleportTo(nid) end
-        end
-    end)
-    return true
+
+    return ok
 end
 
-TeleportService.TeleportInitFailed:Connect(function(_, _, msg)
-    print('tp failed')
+TeleportService.TeleportInitFailed:Connect(function()
     lastFailAt = os.clock()
-    if lastAttemptJobId then
-        task.spawn(releaseKey, lastAttemptJobId)
-    end
+
     task.wait(0.6)
-    local nextId = nextServer()
-    if nextId and rebirths.Value > 0 then tryTeleportTo(nextId) end
-end)
 
--- ==========================================================
--- /JOINED: Успешный вход (Бэкенд блокирует на 1 час)
--- ==========================================================
-shared.__QUESAID_LAST_MARKED__ = shared.__QUESAID_LAST_MARKED__ or nil
-local function markJoinedOnce()
-    local jid = tostring(game.JobId)
-    if shared.__QUESAID_LAST_MARKED__ == jid then return end
-    shared.__QUESAID_LAST_MARKED__ = jid
-    task.delay(2.0, function()
-        pcall(function()
-            postJSON("joined", { placeId = game.PlaceId, serverId = jid })
-        end)
-    end)
-end
-
-task.spawn(function()
-    if not game:IsLoaded() then
-        pcall(function() game.Loaded:Wait() end)
-    end
-    markJoinedOnce()
-end)
-pcall(function()
-    Players.LocalPlayer.CharacterAdded:Connect(markJoinedOnce)
-end)
-task.spawn(function()
-    local last = nil
-    while true do
-        local jid = tostring(game.JobId)
-        if jid ~= last then
-            last = jid
-            markJoinedOnce()
-        end
-        task.wait(5)
+    if rebirths.Value > 0 then
+        local nextId = nextServer()
+        if nextId then tryTeleportTo(nextId) end
     end
 end)
-
 -- ==========================================================
--- Парсер MPS для вебхуков
+--  Brainrot scanning
 -- ==========================================================
-local BLOCK_WORDS = {
-    rainbow=true, gold=true, diamond=true, mythic=true, mythical=true,
-    secret=true, legendary=true, epic=true, rare=true, common=true, god=true, godly=true,
-    ["yin"]=true, ["yang"]=true, ["yin-yang"]=true, ["yin_yang"]=true,
-    shiny=true, mega=true, giga=true, ["stolen"]=true, ["collect"]=true,
-    ["owner"]=true, ["press"]=true, ["hold"]=true, ["click"]=true,
-    ["equip"]=true, ["unequip"]=true, ["upgrade"]=true, ["craft"]=true, ["merge"]=true,
-    ["vip"]=true, ["event"]=true
-}
-
-local function stripRichText(s)
-    s = type(s) == "string" and s or ""
-    s = s:gsub("<.->", "")
-    s = s:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
-    return s
-end
-
-local function isMoneyLine(s)
-    local l = (s or ""):lower()
-    return l:find("%$") or l:find("/s") or l:find("b/s") or l:find("m/s") or l:find("k/s")
-end
-
-local function isAllCaps(s)
-    local letters = (s or ""):gsub("[^%a]", "")
-    if #letters < 3 then return false end
-    return letters:upper() == letters
-end
-
-local function hasOnlyBlockedWords(s)
-    local any = false
-    for w in (s or ""):gmatch("%S+") do
-        local k = w:lower():gsub("[^%a%-_]", "")
-        if k ~= "" then
-            any = true
-            if not BLOCK_WORDS[k] then return false end
-        end
-    end
-    return any
-end
-
-local function scoreName(raw)
-    local s = stripRichText(raw or "")
-    if s == "" then return -1, "" end
-    if isMoneyLine(s) then return -1, "" end
-    if s:match("^%d+$") then
-        local n = #s
-        if n >= 2 and n <= 4 then
-            return 100, s
-        else
-            return -1, ""
-        end
-    end
-    if s:find("%d") then return -1, "" end
-    if isAllCaps(s) or hasOnlyBlockedWords(s) then return -1, "" end
-    local len = #s
-    local words = 0
-    for _ in s:gmatch("%S+") do words = words + 1 end
-    local sc = 0
-    sc = sc + math.min(len, 36)
-    if words >= 2 and words <= 5 then sc = sc + 25 end
-    if s:match("^[%u]") and not s:match("^[%u%s%-_']+$") then sc = sc + 3 end
-    if s:find("[%.%,%!%?]") then sc = sc - 2 end
-    return sc, s
-end
 
 local function parseMPS(s)
     if type(s) ~= "string" then return nil end
@@ -480,15 +307,8 @@ local function shortMoney(v)
     end
 end
 
-local function firstBasePart(m)
-    if m:IsA("Model") and m.PrimaryPart then return m.PrimaryPart end
-    for _, d in ipairs(m:GetDescendants()) do
-        if d:IsA("BasePart") then return d end
-    end
-end
 
 local function scanModel(m)
-    print('scanning model ', m.Name)
     if not m:IsA("Model") then return end
 
     local animalPodiums = m:FindFirstChild("AnimalPodiums")
@@ -534,9 +354,17 @@ local function scanModel(m)
             table.insert(all, { name = name, money = money })
         end
 
-        if not bestMPS or money > bestMPS then
-            bestMPS = money
+        local p1 = PRIORITY_INDEX[name]
+        local p2 = bestName and PRIORITY_INDEX[bestName]
+
+        if p1 then
+            if not p2 or p1 > p2 then
+                bestName = name
+                bestMPS = money
+            end
+        elseif not p2 and (not bestMPS or money > bestMPS) then
             bestName = name
+            bestMPS = money
         end
     end
 
@@ -549,7 +377,7 @@ end
 
 
 -- =========================
--- Флаг: был ли отправлен хоть один вебхук
+-- Webhooks
 -- =========================
 
 -- Надёжная отправка вебхуков (5 попыток)
@@ -580,8 +408,6 @@ local function sendWebhookReliable(url, data)
     return false
 end
 
--- Вебхуки
-
 local function sendWebhook(name, mps, url, fields, color, all, owner)
     if url == "" or not url then return end
 
@@ -595,7 +421,7 @@ local function sendWebhook(name, mps, url, fields, color, all, owner)
         string.sub(jobId, 25, 36)
     )
 
-    local browserLink = "https://www.roblox.com/games/" .. tostring(placeId) .. "/?gameInstanceId=" .. tostring(jobId)
+    -- local browserLink = "https://www.roblox.com/games/" .. tostring(placeId) .. "/?gameInstanceId=" .. tostring(jobId)
     local joinScript = 'game:GetService("TeleportService"):TeleportToPlaceInstance('
         .. tostring(placeId) .. ',"' .. tostring(jobId) .. '",game.Players.LocalPlayer)'
 
@@ -621,7 +447,8 @@ local function sendWebhook(name, mps, url, fields, color, all, owner)
         thumbnail = {
             url = image
         }, 
-        footer = { text = "Made by Ethena Team since 1987 • Today at " .. os.date("%H:%M") }
+        -- footer = { text = "Made by Ethena Team since 1987 • Today at " .. os.date("%H:%M") }
+        footer = { text = "Ethena Notifier - v1.0" }
     }
 
     sendWebhookReliable(url, { embeds = { embed } })
@@ -647,12 +474,10 @@ local function useNotify(name, mps, owner, all)
     local key = tostring(game.JobId) .. "|" .. tostring(name) .. "|" .. tostring(math.floor(mps or 0))
     if sentKeys[key] then return end
     sentKeys[key] = true
-    print('not sent yet')
 
     for url, range in pairs(WEBHOOKS) do
         if mps >= range.min and mps <= range.max then
             table.insert(urls, url)
-            print('inserted url: ')
         end
     end
 
@@ -667,7 +492,6 @@ local function useNotify(name, mps, owner, all)
                 .. "__/**__" .. tostring(Players.MaxPlayers or 0) .. "__", inline = true },
         } or nil
         local color = (highlight or mps >= 100_000_000) and 16766720 or nil
-        print('sending webhook', name, mps, url, fields)
         task.spawn(function()
             sendWebhook(name, mps, url, fields, color, allBrainrots, owner)
         end)
@@ -675,7 +499,7 @@ local function useNotify(name, mps, owner, all)
 end
 
 -- ==========================================================
--- 🔥 РАННИЙ СКАНЕР WORKSPACE — ловит модели ещё до полной загрузки
+-- Handle new brainrots on server
 -- ==========================================================
 local earlyScanned = {}
 
@@ -686,7 +510,7 @@ task.spawn(function()
         earlyScanned[obj] = true
 
         task.wait(0.05)
-        -- task.wait(1000)
+
         local name, mps, owner, all = scanModel(obj)
         if not mps then return end
 
@@ -697,7 +521,32 @@ task.spawn(function()
 end)
 
 -- ==========================================================
--- Анти-кик реджоин через бэкенд
+-- Scanning brainrots on join
+-- ==========================================================
+task.spawn(function()
+    while true do
+        local bestModel, bestName, bestMPS, bestowner, bestall = nil, nil, -1, nil, nil
+
+        for _, m in ipairs(workspace:WaitForChild("Plots"):GetChildren()) do
+            local nm, mps, owner, all = scanModel(m)
+            if mps then
+                if mps > bestMPS then
+                    bestMPS, bestModel, bestName, bestowner, bestall = mps, m, nm, owner, all
+                end
+            end
+        end
+
+        if bestModel and bestMPS > 0 then
+            useNotify(bestName or bestModel.Name, bestMPS, bestowner, bestall)
+        end
+
+        task.wait(WEBHOOK_REFRESH)
+    end
+end)
+
+
+-- ==========================================================
+-- Rejoin with error
 -- ==========================================================
 local rejoinBusy = false
 local function rejoinViaBackend()
@@ -717,7 +566,7 @@ local function rejoinViaBackend()
         task.wait(0.6 + 0.4 * tries)
     end
     pcall(function()
-        -- TeleportService:Teleport(game.PlaceId, LocalPlayer)
+        TeleportService:Teleport(game.PlaceId, LocalPlayer)
     end)
     task.delay(10, function() rejoinBusy = false end)
     return false
@@ -762,81 +611,32 @@ task.spawn(function()
 end)
 
 -- ==========================================================
--- Главный цикл для вебхуков (парсер)
+-- First join hop
 -- ==========================================================
-task.spawn(function()
-    while true do
-        local bestModel, bestName, bestMPS, bestowner, bestall = nil, nil, -1, nil, nil
-
-        for _, m in ipairs(workspace:WaitForChild("Plots"):GetChildren()) do
-            print('PLOT: ', m.Name)
-            local nm, mps, owner, all = scanModel(m)
-            if mps then
-                if mps > bestMPS then
-                    bestMPS, bestModel, bestName, bestowner, bestall = mps, m, nm, owner, all
-                end
-            end
-        end
-
-        if bestModel and bestMPS > 0 then
-            useNotify(bestName or bestModel.Name, bestMPS, bestowner, bestall)
-        end
-
-        task.wait(WEBHOOK_REFRESH)
-    end
-end)
-
--- ==========================================================
--- 🧠 ONE-SHOT BRAINROT HOPPER (режим B — с ретраями + мониторинг)
--- ==========================================================
-local function getNextJob_oneShot()
-    local data = postJSON("next", {
-        placeId    = game.PlaceId,
-        currentJob = game.JobId,
-        minPlayers = MIN_PLAYERS
-    })
-    print('fetched next (oneshot)')
-    if type(data) == "table" and data.ok and data.id then
-        markJobIdOk()
-        return tostring(data.id)
-    end
-    markJobIdFail()
-    if (consecutiveNoJobId >= MAX_CONSECUTIVE_NOJOB)
-        or ((os.clock() - lastJobIdOkTime) > NO_JOBID_STALL_TIME) then
-        softResetJobFlow("getNextJob_oneShot: долго нет JobID")
-    end
-    return nil
-end
-
 local function oneShotHop()
     local jobId
-    -- 🔁 Делаем до 12 попыток получить JobID
-    for attempt = 1, 12 do
-        print(string.format("[ONE-SHOT] Попытка %d получить Job ID...", attempt))
-        jobId = getNextJob_oneShot()
+
+    for attempt = 1, 50 do
+        jobId = nextServer()
         if jobId then
             break
         end
-        -- маленькая пауза между попытками (увеличивается)
+
         task.wait(0.25 + attempt * 0.07)
     end
 
     if not jobId then
-        warn("[ONE-SHOT] Не удалось получить Job ID даже после 12 попыток.")
+        warn("[ONE-SHOT] Couldn't get a jobid after 12 attempts.")
         return
     end
 
-    print("[ONE-SHOT] Получен Job ID:", jobId)
+    task.wait(math.random(45, 70) / 100)
 
-    -- ⏱ даём чуть-чуть времени, чтобы ранний сканер/лог успел отработать
-    task.wait(math.random(45, 70) / 100) -- 0.45–0.70 сек
-    -- task.wait(15)
     pcall(function()
         TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, LocalPlayer)
     end)
 end
 
--- Запуск one-shot хопера (после появления персонажа)
 task.spawn(function()
     local lp = Players.LocalPlayer
     while not lp do
@@ -853,5 +653,4 @@ task.spawn(function()
     oneShotHop()
 end)
 
--- Конец файла
--- ペニス、ペニス、スプーン
+-- torch, chatgpt ethiopia and more
