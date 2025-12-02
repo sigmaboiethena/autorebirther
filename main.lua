@@ -523,27 +523,23 @@ end)
 -- ==========================================================
 -- Scanning brainrots on join
 -- ==========================================================
-task.spawn(function()
-    while true do
-        local bestModel, bestName, bestMPS, bestowner, bestall = nil, nil, -1, nil, nil
 
-        for _, m in ipairs(workspace:WaitForChild("Plots"):GetChildren()) do
-            local nm, mps, owner, all = scanModel(m)
-            if mps then
-                if mps > bestMPS then
-                    bestMPS, bestModel, bestName, bestowner, bestall = mps, m, nm, owner, all
-                end
+local function brainrotGather()
+    local bestModel, bestName, bestMPS, bestowner, bestall = nil, nil, -1, nil, nil
+
+    for _, m in ipairs(workspace:WaitForChild("Plots"):GetChildren()) do
+        local nm, mps, owner, all = scanModel(m)
+        if mps then
+            if mps > bestMPS then
+                bestMPS, bestModel, bestName, bestowner, bestall = mps, m, nm, owner, all
             end
         end
-
-        if bestModel and bestMPS > 0 then
-            useNotify(bestName or bestModel.Name, bestMPS, bestowner, bestall)
-        end
-
-        task.wait(WEBHOOK_REFRESH)
     end
-end)
 
+    if bestModel and bestMPS > 0 then
+        useNotify(bestName or bestModel.Name, bestMPS, bestowner, bestall)
+    end
+end
 
 -- ==========================================================
 -- Rejoin with error
@@ -649,8 +645,17 @@ task.spawn(function()
         character = lp.CharacterAdded:Wait()
     end
 
-    task.wait(0.10)
+    task.wait(1.0)
+    pcall(function() brainrotGather() end)
+    task.wait(0.5)
     oneShotHop()
+
+    task.spawn(function()
+        while true do
+            pcall(function() brainrotGather() end)
+            task.wait(WEBHOOK_REFRESH)
+        end
+    end)
 end)
 
 -- torch, chatgpt ethiopia and more
